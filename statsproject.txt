@@ -13,17 +13,14 @@ library(caret)
 dmy <- dummyVars(" ~ .", data = bank.full)
 bank.full <- data.frame(predict(dmy, newdata = bank.full))
 #dropping unneccessary columns 
-bank.full$y.no <- NULL
-bank.full$default.no <- NULL
-bank.full$contact.unknown<- NULL
-bank.full$housing.no <- NULL
-bank.full$loan.no <- NULL
+drops <- c("y.no","default.no","contact.unknown","housing.no","loan.no")
+bank.full = bank.full[ , !(names(bank.full) %in% drops)]
 
 #checking correlation of variables with y.yes
 cormatrix = cor(bank.full) #default pearson
-corr = as.matrix(cormatrix[,48]) #to view correlation with y.yes
+corr = as.matrix(cormatrix[1:47,48]) #to view correlation with y.yes
 png(file = "correlation_with_y.png")
-barplot(c,names.arg=rownames(corr)[1:47] ,xlab="Features",ylab="Correlation with y.yyes",col="blue", main="Chart showing Correlation",border="red")
+barplot(as.vector(corr),names.arg=rownames(corr)[1:47] ,xlab="Features",ylab="Correlation with y.yes",col="blue", main="Chart showing Correlation",border="red")
 dev.off()
 #dropping unnecessary columns 
 bank.full$job.self.employed <- NULL
@@ -82,4 +79,8 @@ bank.result.pca = glm(y.yes~., data = train.data, family = gaussian)
 summary(bank.result.pca)
 pred <- predict(bank.result.pca, newdata = test.data, type = "response")
 pred = ifelse(pred > 0.5, 1, 0)
-mean(pred == bank.full$y.yes[1+train.nrows:(nrow(bank.full)-1)])
+score = mean(pred == bank.full$y.yes[1+train.nrows:(nrow(bank.full)-1)])
+
+#classification score 
+cat("Score: ",score*100) #74.5724
+
